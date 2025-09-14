@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"safereplace/internal/testutil"
 	"strings"
 	"testing"
 )
@@ -31,29 +32,13 @@ func exeName(base string) string {
 	return base
 }
 
-func writeFile(t *testing.T, dir, rel, content string) string {
-	t.Helper()
-	p := filepath.Join(dir, rel)
-	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
-		t.Fatalf("mkdir: %v", err)
-	}
-	if err := os.WriteFile(p, []byte(content), 0o644); err != nil {
-		t.Fatalf("write: %v", err)
-	}
-	abs, err := filepath.Abs(p)
-	if err != nil {
-		t.Fatalf("abs: %v", err)
-	}
-	return abs
-}
-
 func TestCLI_DryRun_Ext(t *testing.T) {
 	bin := buildBinary(t)
 	work := t.TempDir()
 	// Create files: one with matches, one without, and one different ext.
-	a := writeFile(t, work, "a.txt", "foo\nkeep\nfoo\n")
-	_ = writeFile(t, work, "c.txt", "nope\n")
-	_ = writeFile(t, work, "skip.md", "foo\n")
+	a := testutil.WriteFile(t, work, "a.txt", "foo\nkeep\nfoo\n")
+	_ = testutil.WriteFile(t, work, "c.txt", "nope\n")
+	_ = testutil.WriteFile(t, work, "skip.md", "foo\n")
 
 	var stdout, stderr bytes.Buffer
 	cmd := exec.Command(bin, "--pattern", "foo", "--replace", "bar", "--ext", "txt", "--dry-run", "--no-color")
@@ -94,7 +79,7 @@ func TestCLI_DryRun_Ext(t *testing.T) {
 func TestCLI_NoChanges_Exit0(t *testing.T) {
 	bin := buildBinary(t)
 	work := t.TempDir()
-	_ = writeFile(t, work, "a.txt", "hello\nworld\n")
+	_ = testutil.WriteFile(t, work, "a.txt", "hello\nworld\n")
 
 	var stdout, stderr bytes.Buffer
 	cmd := exec.Command(bin, "--pattern", "zzz", "--replace", "qqq", "--ext", "txt", "--dry-run", "--no-color")
@@ -123,7 +108,7 @@ func TestCLI_NoChanges_Exit0(t *testing.T) {
 func TestCLI_Apply_WritesAndBackup(t *testing.T) {
 	bin := buildBinary(t)
 	work := t.TempDir()
-	p := writeFile(t, work, "a.txt", "foo\n")
+	p := testutil.WriteFile(t, work, "a.txt", "foo\n")
 
 	var stdout, stderr bytes.Buffer
 	cmd := exec.Command(bin, "--pattern", "foo", "--replace", "bar", "--ext", "txt", "--no-color", "--dry-run=false", "--backup")
