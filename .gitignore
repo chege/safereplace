@@ -132,3 +132,12 @@ fabric.properties
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/goland+all,visualstudiocode,go
+
+# --- Project Specific ---
+# AI / Context
+GEMINI.md
+AGENTS.md
+.gemini/
+
+# Compiled Binary
+safereplace

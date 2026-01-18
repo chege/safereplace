@@ -1,75 +1,95 @@
-# Safe Find & Replace (Go)
+# 🛡️ Safe Find & Replace (Go)
 
-Safer, preview-first bulk find & replace for codebases. Cross‑platform, single static binary.
+![Go Version](https://img.shields.io/badge/go-1.25-blue)
+[![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE)
 
-## Features
-- Dry-run by default with clear diffs (ANSI color optional).
-- Literal search (regex later).
-- Select files by `--ext`, `--glob`, or `--files`.
-- Optional backups (`.bak`, `.bak.1`, …).
-- Exit codes: `0` no changes, `1` changes/applied, `2` errors.
-- Skips binaries, preserves existing EOLs, atomic writes.
+**safereplace** is a safer, preview-first bulk find & replace tool for codebases. Distributed as a cross-platform, single static binary.
 
-## Install
+## ✨ Features
+
+- **Preview First:** Dry-run by default with clear colored diffs.
+- **Flexible Selection:** Select files by `--ext`, `--glob`, or `--files`.
+- **Atomic Operations:** Writes are atomic and preserve file modes.
+- **Safety Nets:**
+  - Skips binary files.
+  - Optional backups (`.bak`, `.bak.1`, ...).
+  - Exit codes indicate state (`0` no changes, `1` changes/applied, `2` errors).
+- **Literal Search:** Fast, exact string replacement (regex support coming soon).
+
+## 🚀 Install
+
+Build from source:
+
 ```bash
 go build -o safereplace .
-# or: go install ./...
+# or install directly:
+go install ./...
 ```
 
-## Usage
+## 🛠️ Usage
+
 ```bash
-safereplace --pattern OLD --replace NEW [--ext txt | --glob "src/**/*.go" | --files a.go,b.go]
+safereplace --pattern OLD --replace NEW [flags]
 ```
 
-Common flags:
-- `--dry-run` (default true) — preview only.
-- `--no-color` — disable colored diff.
-- `--context N` — reserved (unified context later).
-- `--strict-eol` — treat lone trailing newline changes as diffs.
-- `--backup` — write `.bak` before modifying.
-- `--glob` / `--ext` / `--files` — choose files to process.
+### Common Flags
+
+| Flag | Description | Default |
+| :--- | :--- | :--- |
+| `--dry-run` | Preview changes only | `true` |
+| `--no-color` | Disable colored diff output | `false` |
+| `--backup` | Write `.bak` file before modifying | `false` |
+| `--strict-eol` | Treat lone trailing newline changes as diffs | `false` |
+| `--glob` | Glob pattern to select files | `""` |
+| `--ext` | File extension to select (no dot) | `""` |
+| `--files` | Comma-separated list of files | `""` |
 
 ### Examples
-Dry-run, all `.go` files:
+
+**Preview changes in all Go files:**
 ```bash
-safereplace --pattern Foo --replace Bar --ext go --no-color
+safereplace --pattern Foo --replace Bar --ext go
 ```
-Apply with backup:
+
+**Apply changes with backup:**
 ```bash
 safereplace --pattern foo --replace bar --ext txt --dry-run=false --backup
 ```
-Glob:
+
+**Target specific files using glob:**
 ```bash
 safereplace --pattern v1 --replace v2 --glob "cmd/*/*.go"
 ```
-Explicit files:
+
+## 🔍 Behavior
+
+*   **Discovery:** Recursive search based on criteria. Ignores non-regular files and symlinks.
+*   **Processor:** In-memory literal replacement.
+*   **Diff:** Per-line `-`/`+` preview with `--- before`/`+++ after` headers.
+*   **Apply:** Uses temp file → `fsync` → atomic rename strategy.
+
+## 🚦 Exit Codes
+
+*   `0`: No changes were necessary.
+*   `1`: Changes were detected (in dry-run) or applied.
+*   `2`: One or more errors occurred.
+
+## 🗺️ Roadmap
+
+- [ ] Interactive Mode (`--interactive` / `--yes`)
+- [ ] Regex Mode (`--regex` + flags)
+- [ ] Unified Diff Output (standard `diff` format)
+- [ ] `.gitignore` Support
+- [ ] Concurrency & Streaming for large codebases
+
+## 💻 Development
+
 ```bash
-safereplace --pattern TODO --replace DONE --files README.md,docs/notes.md
-```
-
-## Behavior
-- **Discovery:** recursive by `--ext`, `--glob`, or `--files`. Non-regular & symlinks ignored.
-- **Processor:** in-memory literal replace; counts matches.
-- **Diff:** simple per-line `-`/`+` preview; headers `--- before`/`+++ after`.
-- **Apply:** same-dir temp file → fsync → atomic rename; optional backup; preserves file mode.
-
-## Exit Codes
-- `0` — no changes.
-- `1` — changes detected/applied.
-- `2` — one or more errors.
-
-## Roadmap
-- Interactive/`--yes`
-- Regex mode + options
-- Real unified diffs (`go-difflib`)
-- Excludes / `.gitignore` support
-- Concurrency & streaming
-
-## Development
-```bash
+# Run tests
 go test ./...
-# if using golangci-lint
+
+# Run linter
 golangci-lint run
 ```
 
-> Note: current release is literal-only; regex to follow.
+> **Note:** Current release is literal-only. Regex support is planned for the next minor version.
